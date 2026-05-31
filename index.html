@@ -1,24 +1,632 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Two-Person Chat</title>
-  <link rel="stylesheet" href="chat.css">
+    <meta charset="UTF-8">
+    <title>لوحة التحكم</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    <style>
+        :root {
+            --primary: #107c41;
+            --primary-hover: #0b592e;
+            --bg-main: #f4f6f9;
+            --surface: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+            /* متغيرات ألوان السلكت للحالات */
+            --bg-success: #def7ec;     /* تسليم كامل - خلفية */
+            --text-success: #03543f;   /* تسليم كامل - نص */
+            
+            --bg-partial: #e1f5fe;     /* تسليم جزئي - خلفية */
+            --text-partial: #0288d1;   /* تسليم جزئي - نص */
+
+            --bg-warning: #fde8e8;     /* ملغي - خلفية */
+            --text-warning: #9b1c1c;   /* ملغي - نص */
+
+            --bg-pending: #ffeac2;     /* مؤجل - خلفية */
+            --text-pending: #b45309;   /* مؤجل - نص */
+        }
+
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            background: #e2e8f0;
+            padding: 8px;
+            border-radius: var(--radius);
+            max-width: 1350px;
+            margin: 0 auto 25px auto;
+            overflow-x: auto;
+            box-sizing: border-box;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .tab {
+            flex: 1;
+            white-space: nowrap;
+            background: transparent;
+            border: none;
+            padding: 12px 20px;
+            border-radius: calc(var(--radius) - 4px);
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.25s ease;
+        }
+
+        .tab:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .tab.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .section {
+            display: none;
+            max-width: 1350px;
+            margin: 0 auto;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .box {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .controls-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            gap: 1rem;
+            flex-wrap: wrap;
+            box-sizing: border-box;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 10px 15px;
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            min-width: 180px;
+            outline: none;
+            background-color: var(--surface);
+            color: var(--text-main);
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 124, 65, 0.15);
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            min-width: 1500px;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: center;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f7fafc;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* تنسيق السلكت كبطاقة منبثقة ملونة بداخل خلية بيضاء */
+        .status-select {
+            width: 100%;
+            min-width: 140px;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 20px; 
+            font-size: 13px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .status-select option {
+            background-color: var(--surface);
+            color: var(--text-main);
+            font-weight: normal;
+        }
+
+        .status-saving {
+            color: #fff;
+            background: #2d3748;
+            padding: 10px 20px;
+            border-radius: 30px;
+            display: inline-block;
+            font-size: 14px;
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: var(--shadow);
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pagination-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .pagination-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .pagination-btn:disabled {
+            background-color: #cbd5e0;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+    </style>
 </head>
+
 <body>
-  <div class="chat-app">
-    <div class="chat-header">💬 دردشة خاصة</div>
-    <div id="chat-box" class="chat-box"></div>
-    <div class="chat-input">
-      <select id="user">
-        <option value="A">🧑 مصطفي</option>
-        <option value="B">👩 هيومتي</option>
-      </select>
-      <input type="text" id="message" placeholder="اكتب رسالتك...">
-      <button onclick="sendMessage()">📤</button>
+
+    <div id="statusMessage" class="status-saving">جاري حفظ التعديلات ...</div>
+
+    <div class="tabs" role="tablist">
+        <button class="tab" onclick="showTab('profit')" role="tab">المكسب</button>
+        <button class="tab" onclick="showTab('finance')" role="tab">الحسابات</button>
+        <button class="tab" onclick="showTab('delivery')" role="tab">متابعة التسليم</button>
+        <button class="tab" onclick="showTab('distribute')" role="tab">توزيع المناديب</button>
+        <button class="tab active" onclick="showTab('receive')" role="tab">استلام الشحنات</button>
+        <button class="tab" onclick="showTab('overview')" role="tab">نظرة عامة</button>
     </div>
-  </div>
-  <script src="chat.js"></script>
+
+    <div class="section" id="sec-profit"><div class="box"><h3>قسم الأرباح والمكاسب</h3></div></div>
+    <div class="section" id="sec-finance"><div class="box"><h3>قسم الحسابات</h3></div></div>
+    <div class="section" id="sec-delivery"><div class="box"><h3>قسم متابعة التسليم</h3></div></div>
+    <div class="section" id="sec-distribute"><div class="box"><h3>قسم توزيع المناديب</h3></div></div>
+    <div class="section" id="sec-overview"><div class="box"><h3>قسم النظرة العامة</h3></div></div>
+
+    <div class="section active" id="receive">
+        <div class="box">
+            <div class="controls-container">
+                <div class="control-group">
+                    <select id="riderFilter" onchange="applyFilters()">
+                        <option value="all">كل المناديب</option>
+                    </select>
+
+                    <select id="zoneFilter" onchange="applyFilters()">
+                        <option value="all">كل المناطق</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <select id="statusFilter" onchange="applyFilters()">
+                        <option value="all">كل الحالات</option>
+                        <option value="تسليم كامل">تسليم كامل</option>
+                        <option value="تسليم جزئي">تسليم جزئي</option>
+                        <option value="مؤجل">مؤجل</option>
+                        <option value="ملغي">ملغي</option>
+                        <option value="فارغ">لم يتم الاختيار (فارغ)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <input type="text" id="idSearch" placeholder="اكتب رقم ID للبحث..." oninput="applyFilters()">
+                </div>
+
+                <div class="pagination-container">
+                    <button id="prevBtn" class="pagination-btn" onclick="changePage(-1)">◀ السابق</button>
+                    <span id="pageInfo" class="page-info">صفحة 1 من 1</span>
+                    <button id="nextBtn" class="pagination-btn" onclick="changePage(1)">التالي ▶</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="myTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>المندوب</th>
+                            <th>الحاله</th>
+                            <th>اسم الشركه</th>
+                            <th>المكتب</th>
+                            <th>اسم العميل</th>
+                            <th>رقم الهاتف</th>
+                            <th>المنطقه</th>
+                            <th>العنوان</th>
+                            <th>سعر الاوردر</th>
+                            <th>عموله التوصيل</th>
+                            <th>اجمالي التحصيل</th>
+                            <th>تفاصيل الاوردر</th>
+                            <th>الملاحظات</th>
+                            <th>التاريخ والوقت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="15" style="color: #888;">جاري تحديث البيانات من الشيت ...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(name) {
+            const names = ['profit', 'finance', 'delivery', 'distribute', 'receive', 'overview'];
+            
+            document.querySelectorAll('.tab').forEach((t, i) => {
+                t.classList.toggle('active', names[i] === name);
+            });
+            
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            const targetSection = document.getElementById('sec-' + name);
+            if(targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            if (name === 'profit' && typeof drawChart === 'function') drawChart();
+        }
+
+        const URL_SECRET = "https://script.google.com/macros/s/AKfycbwf2Xl0r7vHufyGBfTDgaFdeUR5oO4OmMJfDJmMWwpnEuCORfTNAJxLfVOhLhiSdHWY/exec";
+
+        let isEditing = false;
+        let globalData = [];
+
+        let currentPage = 1;
+        const rowsPerPage = 20; 
+        let filteredRows = []; 
+
+        document.addEventListener("DOMContentLoaded", function () {
+            fetchMyData();
+            setInterval(fetchMyData, 5000);
+        });
+
+        // دالة تلوين السلكت فقط مع الإبقاء على خلفية الجدول بيضاء
+        function refreshStatusColors(selectElement) {
+            const val = selectElement.value;
+
+            if (val === "تسليم كامل") {
+                selectElement.style.backgroundColor = "var(--bg-success)";
+                selectElement.style.color = "var(--text-success)";
+                selectElement.style.borderColor = "var(--text-success)";
+            } else if (val === "تسليم جزئي") {
+                selectElement.style.backgroundColor = "var(--bg-partial)";
+                selectElement.style.color = "var(--text-partial)";
+                selectElement.style.borderColor = "var(--text-partial)";
+            } else if (val === "مؤجل") {
+                selectElement.style.backgroundColor = "var(--bg-pending)";
+                selectElement.style.color = "var(--text-pending)";
+                selectElement.style.borderColor = "var(--text-pending)";
+            } else if (val === "ملغي") {
+                selectElement.style.backgroundColor = "var(--bg-warning)";
+                selectElement.style.color = "var(--text-warning)";
+                selectElement.style.borderColor = "var(--text-warning)";
+            } else {
+                selectElement.style.backgroundColor = "var(--surface)";
+                selectElement.style.color = "var(--text-main)";
+                selectElement.style.borderColor = "#cbd5e0";
+            }
+        }
+
+        function fetchMyData() {
+            if (isEditing ||
+                document.activeElement.id === 'idSearch' ||
+                document.activeElement.id === 'statusFilter' ||
+                document.activeElement.id === 'riderFilter' ||
+                document.activeElement.id === 'zoneFilter' ||
+                document.activeElement.classList.contains('status-select')) return;
+
+            fetch(URL_SECRET)
+                .then(res => res.json())
+                .then(data => {
+                    if (isEditing) return;
+
+                    globalData = data;
+                    updateRiderFilterOptions(data);
+                    updateZoneFilterOptions(data); 
+                    applyFilters(); 
+                })
+                .catch(err => {
+                    let tbody = document.querySelector('#myTable tbody');
+                    if (tbody && tbody.innerHTML.includes('جاري تحديث')) {
+                        tbody.innerHTML = '<tr><td colspan="15" style="color:red;">عفواً.. فشل التحديث التلقائي .</td></tr>';
+                    }
+                });
+        }
+
+        function updateRiderFilterOptions(data) {
+            let filterSelect = document.getElementById('riderFilter');
+            let currentSelected = filterSelect.value;
+
+            let riders = new Set();
+            for (let i = 1; i < data.length; i++) {
+                if (data[i][1]) riders.add(data[i][1].trim());
+            }
+
+            filterSelect.innerHTML = '<option value="all">كل المناديب</option>';
+            riders.forEach(rider => {
+                let option = document.createElement('option');
+                option.value = rider;
+                option.textContent = rider;
+                filterSelect.appendChild(option);
+            });
+
+            if ([...filterSelect.options].some(opt => opt.value === currentSelected)) {
+                filterSelect.value = currentSelected;
+            }
+        }
+
+        function updateZoneFilterOptions(data) {
+            let zoneSelect = document.getElementById('zoneFilter');
+            let currentSelected = zoneSelect.value;
+
+            let zones = new Set();
+            for (let i = 1; i < data.length; i++) {
+                if (data[i][7]) zones.add(data[i][7].trim());
+            }
+
+            zoneSelect.innerHTML = '<option value="all">كل المناطق</option>';
+            zones.forEach(zone => {
+                let option = document.createElement('option');
+                option.value = zone;
+                option.textContent = zone;
+                zoneSelect.appendChild(option);
+            });
+
+            if ([...zoneSelect.options].some(opt => opt.value === currentSelected)) {
+                zoneSelect.value = currentSelected;
+            }
+        }
+
+        function applyFilters() {
+            if (globalData.length <= 1) return;
+
+            let selectedRider = document.getElementById('riderFilter').value;
+            let selectedZone = document.getElementById('zoneFilter').value;
+            let selectedStatus = document.getElementById('statusFilter').value;
+            let searchIdValue = document.getElementById('idSearch').value.trim().toLowerCase();
+
+            filteredRows = [];
+
+            for (let i = 1; i < globalData.length; i++) {
+                let row = globalData[i];
+                let rowIndex = i + 1; 
+
+                let idValue = row[0] ? row[0].toString().trim().toLowerCase() : '';
+                let riderName = row[1] ? row[1].trim() : '';
+                let currentStatus = row[2] ? row[2].trim() : '';
+                let zoneName = row[7] ? row[7].trim() : '';
+
+                if (selectedRider !== 'all' && riderName !== selectedRider) continue;
+                if (selectedZone !== 'all' && zoneName !== selectedZone) continue;
+
+                if (selectedStatus !== 'all') {
+                    if (selectedStatus === 'فارغ' && currentStatus !== '') continue;
+                    else if (selectedStatus !== 'فارغ' && currentStatus !== selectedStatus) continue;
+                }
+
+                if (searchIdValue !== '' && !idValue.includes(searchIdValue)) continue;
+
+                filteredRows.push({ data: row, originalIndex: rowIndex });
+            }
+
+            currentPage = 1;
+            renderPaginationTable();
+        }
+
+        function renderPaginationTable() {
+            let tbody = document.querySelector('#myTable tbody');
+            tbody.innerHTML = '';
+
+            if (filteredRows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="15" style="color: #888;">لا توجد نتائج مطابقة للبحث الحالي.</td></tr>';
+                document.getElementById('pageInfo').innerText = "صفحة 0 من 0";
+                document.getElementById('prevBtn').disabled = true;
+                document.getElementById('nextBtn').disabled = true;
+                return;
+            }
+
+            let totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+            let startIndex = (currentPage - 1) * rowsPerPage;
+            let endIndex = Math.min(startIndex + rowsPerPage, filteredRows.length);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                let rowItem = filteredRows[i];
+                let row = rowItem.data;
+                let rowIndex = rowItem.originalIndex;
+                let currentStatus = row[2] ? row[2].trim() : '';
+
+                tbody.innerHTML += `
+                <tr>
+                    <td>${row[0] || ''}</td>
+                    <td>${row[1] || ''}</td>
+                    <td>
+                        <select class="status-select" onfocus="isEditing=true" onblur="isEditing=false" onchange="updateCell(${rowIndex}, 3, this)">
+                            <option value="" ${currentStatus === '' ? 'selected' : ''}>- اختر الحالة -</option>
+                            <option value="تسليم كامل" ${currentStatus === 'تسليم كامل' ? 'selected' : ''}>تسليم كامل</option>
+                            <option value="تسليم جزئي" ${currentStatus === 'تسليم جزئي' ? 'selected' : ''}>تسليم جزئي</option>
+                            <option value="مؤجل" ${currentStatus === 'مؤجل' ? 'selected' : ''}>مؤجل</option>
+                            <option value="ملغي" ${currentStatus === 'ملغي' ? 'selected' : ''}>ملغي</option>
+                        </select>
+                    </td>
+                    <td>${row[3] || ''}</td>
+                    <td>${row[4] || ''}</td>
+                    <td>${row[5] || ''}</td>
+                    <td>${row[6] || ''}</td>
+                    <td>${row[7] || ''}</td>
+                    <td>${row[8] || ''}</td>
+                    <td>${row[9] || ''}</td>
+                    <td>${row[10] || ''}</td>
+                    <td>${row[11] || ''}</td>
+                    <td>${row[12] || ''}</td>
+                    <td>${row[13] || ''}</td>
+                    <td>${row[14] || ''}</td>
+                </tr>
+                `;
+            }
+
+            // تلوين السلكت فقط فور بناء الجدول
+            document.querySelectorAll('.status-select').forEach(select => {
+                refreshStatusColors(select);
+            });
+
+            document.getElementById('pageInfo').innerText = `صفحة ${currentPage} من ${totalPages}`;
+            document.getElementById('prevBtn').disabled = (currentPage === 1);
+            document.getElementById('nextBtn').disabled = (currentPage === totalPages);
+        }
+
+        function changePage(direction) {
+            let totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+            let targetPage = currentPage + direction;
+
+            if (targetPage >= 1 && targetPage <= totalPages) {
+                currentPage = targetPage;
+                renderPaginationTable();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function updateCell(rowIndex, colIndex, cellElement) {
+            isEditing = true;
+            let newValue = cellElement.value;
+            let statusMessage = document.getElementById('statusMessage');
+
+            // تحديث لون السلكت فوراً محلياً
+            refreshStatusColors(cellElement);
+
+            statusMessage.style.opacity = '1';
+            statusMessage.innerText = '⏳ جاري تحديث الشيت...';
+
+            let formData = new FormData();
+            formData.append('action', 'update');
+            formData.append('row', rowIndex);
+            formData.append('col', colIndex);
+            formData.append('value', newValue);
+
+            fetch(URL_SECRET, {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    isEditing = false;
+                    if (data.result === 'success') {
+                        statusMessage.innerText = '✅ تم تحديث الحالة في الشيت بنجاح!';
+
+                        if (globalData[rowIndex - 1]) {
+                            globalData[rowIndex - 1][colIndex - 1] = newValue;
+                        }
+
+                        setTimeout(() => { statusMessage.style.opacity = '0'; }, 2000);
+                    } else {
+                        alert('فشل التحديث، تأكد من كود السكريبت الخلفي للـ شيت');
+                        statusMessage.style.opacity = '0';
+                    }
+                })
+                .catch(err => {
+                    isEditing = false;
+                    alert('حدث خطأ في الاتصال أثناء تحديث البيانات.');
+                    statusMessage.style.opacity = '0';
+                });
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
 </body>
+
 </html>
