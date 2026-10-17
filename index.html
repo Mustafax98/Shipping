@@ -1,631 +1,1575 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الطلبات التفاعلي - الحفظ التلقائي والتحقق الذكي</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for beautiful icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS CDN (for Excel import/export on the client side) -->
+    <!-- Google Fonts (Cairo) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
-        :root {
-            --primary: #107c41;
-            --primary-hover: #0b592e;
-            --bg-main: #f4f6f9;
-            --surface: #ffffff;
-            --text-main: #2d3748;
-            --text-muted: #718096;
-            --border: #e2e8f0;
-            --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-
-            /* متغيرات ألوان السلكت للحالات */
-            --bg-success: #def7ec;     /* تسليم كامل - خلفية */
-            --text-success: #03543f;   /* تسليم كامل - نص */
-            
-            --bg-partial: #e1f5fe;     /* تسليم جزئي - خلفية */
-            --text-partial: #0288d1;   /* تسليم جزئي - نص */
-
-            --bg-warning: #fde8e8;     /* ملغي - خلفية */
-            --text-warning: #9b1c1c;   /* ملغي - نص */
-
-            --bg-pending: #ffeac2;     /* مؤجل - خلفية */
-            --text-pending: #b45309;   /* مؤجل - نص */
-        }
-
         body {
-            font-family: 'Cairo', Arial, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-            overflow-x: hidden;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            background: #e2e8f0;
-            padding: 8px;
-            border-radius: var(--radius);
-            max-width: 1350px;
-            margin: 0 auto 25px auto;
-            overflow-x: auto;
-            box-sizing: border-box;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .tab {
-            flex: 1;
-            white-space: nowrap;
-            background: transparent;
-            border: none;
-            padding: 12px 20px;
-            border-radius: calc(var(--radius) - 4px);
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-muted);
-            transition: all 0.25s ease;
-        }
-
-        .tab:hover {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .tab.active {
-            background: var(--surface);
-            color: var(--primary);
-            box-shadow: var(--shadow);
-        }
-
-        .section {
-            display: none;
-            max-width: 1350px;
-            margin: 0 auto;
-        }
-
-        .section.active {
-            display: block;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .box {
-            background: var(--surface);
-            padding: 24px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            box-sizing: border-box;
-            width: 100%;
-        }
-
-        .controls-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 20px;
-            padding: 15px 20px;
-            background: var(--surface);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            gap: 1rem;
-            flex-wrap: wrap;
-            box-sizing: border-box;
-        }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .control-group select,
-        .control-group input {
-            padding: 10px 15px;
-            font-size: 14px;
-            font-family: 'Cairo', sans-serif;
-            border-radius: 6px;
-            border: 1px solid #cbd5e0;
-            min-width: 180px;
-            outline: none;
-            background-color: var(--surface);
-            color: var(--text-main);
-        }
-
-        .control-group input:focus,
-        .control-group select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(16, 124, 65, 0.15);
-        }
-
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-top: 15px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--surface);
-            min-width: 1500px;
-        }
-
-        th,
-        td {
-            border: 1px solid var(--border);
-            padding: 10px 12px;
-            text-align: center;
-            white-space: nowrap;
-            font-size: 14px;
-        }
-
-        th {
-            background-color: #f7fafc;
-            color: var(--text-main);
-            font-weight: 700;
-        }
-
-        /* تنسيق السلكت كبطاقة منبثقة ملونة بداخل خلية بيضاء */
-        .status-select {
-            width: 100%;
-            min-width: 140px;
-            padding: 6px 10px;
-            border: 1px solid #cbd5e0;
-            border-radius: 20px; 
-            font-size: 13px;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 700;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        .status-select option {
-            background-color: var(--surface);
-            color: var(--text-main);
-            font-weight: normal;
-        }
-
-        .status-saving {
-            color: #fff;
-            background: #2d3748;
-            padding: 10px 20px;
-            border-radius: 30px;
-            display: inline-block;
-            font-size: 14px;
-            position: fixed;
-            top: 25px;
-            left: 25px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            box-shadow: var(--shadow);
             font-family: 'Cairo', sans-serif;
         }
 
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
+        /* تنسيق الخلية المحددة */
+        .cell-selected {
+            background-color: #d1fae5 !important;
+            /* أخضر فاتح */
+            outline: 2px solid #10b981 !important;
+            /* إطار أخضر */
+            outline-offset: -2px;
         }
 
-        .pagination-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
+        .cell-editing {
+            background-color: #fff !important;
+            outline: 2px solid #2563eb !important;
+            outline-offset: -2px;
         }
 
-        .pagination-btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .pagination-btn:disabled {
-            background-color: #cbd5e0;
-            color: #a0aec0;
-            cursor: not-allowed;
-        }
-
-        .page-info {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-main);
+        input[data-field][readonly] {
+            cursor: default;
         }
     </style>
 </head>
 
-<body>
+<body class="h-screen overflow-hidden bg-slate-100 flex flex-col">
 
-    <div id="statusMessage" class="status-saving">جاري حفظ التعديلات ...</div>
+    <!-- Header -->
+    <!-- الهيدر الرئيسي ويحتوي على اللوجو واسم الشركة كثابت، ومحتوى التابات المتغير -->
+    <header id="dynamicTopBar"
+        class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md py-4 px-[5%] flex flex-col lg:flex-row items-center justify-between gap-6 flex-shrink-0 w-full">
 
-    <div class="tabs" role="tablist">
-        <button class="tab" onclick="showTab('profit')" role="tab">المكسب</button>
-        <button class="tab" onclick="showTab('finance')" role="tab">الحسابات</button>
-        <button class="tab" onclick="showTab('delivery')" role="tab">متابعة التسليم</button>
-        <button class="tab" onclick="showTab('distribute')" role="tab">توزيع المناديب</button>
-        <button class="tab active" onclick="showTab('receive')" role="tab">استلام الشحنات</button>
-        <button class="tab" onclick="showTab('overview')" role="tab">نظرة عامة</button>
-    </div>
+        <!-- 1. القسم الثابت: اللوجو واسم الشركة -->
+        <div class="flex items-center gap-3 w-full lg:w-[10%] flex-shrink-0">
+            <img id="header-company-logo" src="" alt="شعار الشركة"
+                class="hidden w-12 h-12 rounded-xl object-cover bg-white/0">
+            <div id="header-company-logo-fallback"
+                class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+            </div>
+            <div class="flex flex-col min-w-0">
+                <span id="header-company-name" class="text-s text-emerald-200 font-medium truncate"></span>
+            </div>
+        </div>
 
-    <div class="section" id="sec-profit"><div class="box"><h3>قسم الأرباح والمكاسب</h3></div></div>
-    <div class="section" id="sec-finance"><div class="box"><h3>قسم الحسابات</h3></div></div>
-    <div class="section" id="sec-delivery"><div class="box"><h3>قسم متابعة التسليم</h3></div></div>
-    <div class="section" id="sec-distribute"><div class="box"><h3>قسم توزيع المناديب</h3></div></div>
-    <div class="section" id="sec-overview"><div class="box"><h3>قسم النظرة العامة</h3></div></div>
+        <!-- 2. القسم المتغير: يحتوي على تابانلز التابات (كل تاب تعرض محتواها الخاص) -->
+        <div class="flex items-center justify-between w-full lg:w-[90%] flex-shrink-0">
+            <!-- تاب 1: الطلبات -->
+            <div id="topbar-panel-1"
+                class="topbar-panel flex flex-col lg:flex-row items-center justify-between gap-4 w-full">
 
-    <div class="section active" id="receive">
-        <div class="box">
-            <div class="controls-container">
-                <div class="control-group">
-                    <select id="riderFilter" onchange="applyFilters()">
-                        <option value="all">كل المناديب</option>
-                    </select>
-
-                    <select id="zoneFilter" onchange="applyFilters()">
-                        <option value="all">كل المناطق</option>
-                    </select>
+                <!-- شبكة الإحصائيات (7 عناصر) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 w-full lg:w-auto">
+                    <div
+                        class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-full h-[70px] flex flex-col justify-center items-center">
+                        <span class="text-[12px] font-semibold text-emerald-700">الطلبات</span>
+                        <span class="text-[16px] font-semibold text-emerald-600">1512</span>
+                    </div>
+                    <div
+                        class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-full h-[70px] flex flex-col justify-center items-center">
+                        <span class="text-[12px] font-semibold text-emerald-700">التحصيل</span>
+                        <span
+                            class="text-[14px] font-semibold text-emerald-600 truncate w-full text-center">1.123M</span>
+                    </div>
+                    <div
+                        class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-full h-[70px] flex flex-col justify-center items-center">
+                        <span class="text-[12px] font-semibold text-emerald-700">استلامات</span>
+                        <span class="text-[16px] font-semibold text-emerald-600">151</span>
+                    </div>
+                    <div
+                        class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-full h-[70px] flex flex-col justify-center items-center">
+                        <span class="text-[12px] font-semibold text-emerald-700">تدوير</span>
+                        <span class="text-[16px] font-semibold text-emerald-600">83</span>
+                    </div>
+                    <div
+                        class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-full h-[70px] flex flex-col justify-center items-center">
+                        <span class="text-[12px] font-semibold text-emerald-700">رفض رفض</span>
+                        <span class="text-[16px] font-semibold text-emerald-600">12</span>
+                    </div>
+                    <div
+                        class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-full h-[70px] flex flex-col justify-center items-center">
+                        <span class="text-[12px] font-semibold text-emerald-700">رفض دفع</span>
+                        <span class="text-[16px] font-semibold text-emerald-600">73</span>
+                    </div>
+                    <div
+                        class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-full h-[70px] flex flex-col justify-center items-center">
+                        <span class="text-[12px] font-semibold text-emerald-700">مرتجع</span>
+                        <span class="text-[16px] font-semibold text-emerald-600">40</span>
+                    </div>
                 </div>
 
-                <div class="control-group">
-                    <select id="statusFilter" onchange="applyFilters()">
-                        <option value="all">كل الحالات</option>
-                        <option value="تسليم كامل">تسليم كامل</option>
-                        <option value="تسليم جزئي">تسليم جزئي</option>
-                        <option value="مؤجل">مؤجل</option>
-                        <option value="ملغي">ملغي</option>
-                        <option value="فارغ">لم يتم الاختيار (فارغ)</option>
-                    </select>
-                </div>
-
-                <div class="control-group">
-                    <input type="text" id="idSearch" placeholder="اكتب رقم ID للبحث..." oninput="applyFilters()">
-                </div>
-
-                <div class="pagination-container">
-                    <button id="prevBtn" class="pagination-btn" onclick="changePage(-1)">◀ السابق</button>
-                    <span id="pageInfo" class="page-info">صفحة 1 من 1</span>
-                    <button id="nextBtn" class="pagination-btn" onclick="changePage(1)">التالي ▶</button>
+                <!-- أزرار التحميل والإضافة -->
+                <div class="flex items-center gap-3 rounded-xl flex-shrink-0">
+                    <button onclick="exportToExcel()"
+                        class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow flex items-center gap-2">
+                        <i class="fa-solid fa-download"></i>
+                        تحميل
+                    </button>
+                    <label for="import-excel"
+                        class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition cursor-pointer flex items-center gap-2">
+                        <i class="fa-solid fa-upload"></i>
+                        أضافة
+                        <input type="file" id="import-excel" class="hidden" accept=".xlsx,.xls,.csv"
+                            onchange="importFromExcel(event)">
+                    </label>
+                    <button onclick="closeDay()"
+                        class="bg-slate-800 text-white hover:bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-lock"></i>
+                        تقفيل اليوم
+                    </button>
                 </div>
             </div>
 
-            <div class="table-container">
-                <table id="myTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>المندوب</th>
-                            <th>الحاله</th>
-                            <th>اسم الشركه</th>
-                            <th>المكتب</th>
-                            <th>اسم العميل</th>
-                            <th>رقم الهاتف</th>
-                            <th>المنطقه</th>
-                            <th>العنوان</th>
-                            <th>سعر الاوردر</th>
-                            <th>عموله التوصيل</th>
-                            <th>اجمالي التحصيل</th>
-                            <th>تفاصيل الاوردر</th>
-                            <th>الملاحظات</th>
-                            <th>التاريخ والوقت</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="15" style="color: #888;">جاري تحديث البيانات من الشيت ...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- تاب 2: التقسيم -->
+            <div id="topbar-panel-2" class="topbar-panel hidden flex items-center justify-between w-full">
+                <div class="flex items-center gap-4">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <h1 class="text-lg font-bold text-white">التقسيم الذكي</h1>
+                </div>
+
+                <div class="flex items-center gap-6">
+
+                </div>
+            </div>
+
+            <!-- تاب 3: التقارير -->
+            <div id="topbar-panel-3" class="topbar-panel hidden flex items-center justify-between w-full">
+                <h1 class="text-lg font-bold text-white">تقارير الأداء</h1>
+                <span class="text-xs bg-white/20 text-white px-3 py-1 rounded-full font-medium">محدث اليوم</span>
+            </div>
+
+            <!-- تاب 4: إدارة الموظفين -->
+            <div id="topbar-panel-4" class="topbar-panel hidden flex items-center justify-between w-full">
+                <h1 class="text-lg font-bold text-white">إدارة الموظفين</h1>
+                <button
+                    class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-emerald-400 transition">
+                    موظف جديد +
+                </button>
+            </div>
+
+
+            <!-- تاب 5 : المراجعه -->
+            <div id="topbar-panel-5" class="topbar-panel hidden flex items-center justify-between w-full">
+
+                <!-- اختيار الفترة: عنصر واحد (من - إلى) + اختصارات -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <h1 class="text-lg font-bold text-white">مراجعة</h1>
+                    <div
+                        class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 focus-within:border-emerald-500 transition">
+                        <i class="fa-regular fa-calendar text-emerald-600 text-xs"></i>
+                        <span class="text-[11px] font-semibold text-slate-500">من</span>
+                        <input type="date" id="review-from" onchange="reviewOnRangeInput('from')"
+                            class="bg-transparent text-xs text-slate-700 focus:outline-none">
+                        <span class="text-[11px] font-semibold text-slate-500">إلى</span>
+                        <input type="date" id="review-to" onchange="reviewOnRangeInput('to')"
+                            class="bg-transparent text-xs text-slate-700 focus:outline-none">
+                    </div>
+
+                    <div id="review-presets" class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" data-preset="today" onclick="reviewPreset('today')"
+                            class="px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition bg-white text-slate-600 border-slate-200">اليوم</button>
+                        <button type="button" id="review-edit-btn" onclick="reviewToggleEdit()"
+                            class="px-3 py-2 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>تعديل</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex  items-center gap-3">
+                    <button type="button" onclick="reviewExportPDF()"
+                        class="px-3 py-1.5 text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf"></i><span>تقرير PDF</span>
+                    </button>
+                    <button type="button" onclick="reviewExportSelectedOffice()"
+                        class="px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-excel"></i><span>Excel للمكتب</span>
+                    </button>
+                    <button type="button" onclick="reviewExportAllOffices()"
+                        class="px-3 py-1.5 text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-zipper"></i><span>Excel كل المكاتب</span>
+                    </button>
+                </div>
+            </div>
+            <!-- تاب 6 : التطبيقات -->
+            <div id="topbar-panel-6" class="topbar-panel hidden flex items-center justify-between w-full">
+                <h1 class="text-lg font-bold text-white">إعدادات التطبيقات</h1>
+                <p class="text-xs text-emerald-200">آخر تعديل: منذ ساعة</p>
+            </div>
+
+            <!-- تاب 7: الإعدادات -->
+            <div id="topbar-panel-7" class="topbar-panel hidden flex items-center justify-between w-full">
+                <h1 class="text-lg font-bold text-white">إعدادات النظام</h1>
+                <p class="text-xs text-emerald-200">آخر تعديل: منذ ساعة</p>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-auto p-4">
+
+        <div id="panels-container" class="relative w-full min-h-[400px]">
+
+            <!-- 1. الطلبات -->
+            <div id="main-panel-1"
+                class="main-panel flex flex-col gap-6 transition-all duration-500 transform opacity-100 translate-x-0 scale-100">
+                <div
+                    class="bg-white  rounded-2xl shadow-sm border border-slate-100 flex-1 flex flex-col  min-h-0 overflow-hidden p-4">
+                    <div
+                        class="flex justify-between items-center flex-wrap gap-4 pb-3.5 border-b border-slate-100 flex-shrink-0">
+                        <div class="flex items-center gap-5 flex-1 min-w-[280px]">
+                            <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                                <i class="fa-solid fa-table text-emerald-500"></i>
+                                Orders
+                            </h2>
+                            <div class="relative flex-1 min-w-[220px]">
+                                <span
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                </span>
+                                <input type="text" id="table-search-input"
+                                    placeholder="ابحث باسم العميل، كود الأوردر، أو رقم الموبايل..."
+                                    class="w-full pl-3 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                                    oninput="renderTable()">
+                            </div>
+                        </div>
+                        <!-- يمكنك وضع هذا الجزء من HTML في أعلى الجدول بجوار الأزرار -->
+                        <div class="flex items-center gap-2 ">
+                            <button onclick="redo()" id="btn-redo" disabled
+                                class="px-3 py-1.5 text-xs bg-slate-100 border border-slate-300 rounded text-slate-700 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                            <button onclick="undo()" id="btn-undo" disabled
+                                class="px-3 py-1.5 text-xs bg-slate-100 border border-slate-300 rounded text-slate-700 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="addNewBlankRowAndFocus()"
+                                class="bg-emerald-600 text-white hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2">
+                                <i class="fa-solid fa-plus-circle"></i>
+                                طلب جديد
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="w-full overflow-x-auto">
+                        <table class="excel-table w-full text-center border-collapse text-xs table-fixed">
+                            <thead class="bg-slate-100 text-slate-600">
+                                <tr class="bg-slate-100 text-slate-600">
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[100px] text-center"
+                                        data-col-index="1">
+                                        ID
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[130px] text-center"
+                                        data-col-index="2">
+                                        العميل
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[110px] text-center"
+                                        data-col-index="3">
+                                        رقم الهاتف
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[110px] text-center"
+                                        data-col-index="4">
+                                        رقم اخر
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[80px] text-center"
+                                        data-col-index="5">
+                                        مرتجع
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th id="th-filter-status"
+                                        class="relative py-3 px-3 border-b border-l border-slate-200 font-bold text-slate-700 text-center text-xs"
+                                        data-col-index="6">
+                                        الحاله
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[90px] text-center"
+                                        data-col-index="7">
+                                        الاجمالي
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[90px] text-center"
+                                        data-col-index="8">
+                                        التحصيل
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[70px] text-center"
+                                        data-col-index="9">
+                                        العدد
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[110px] text-center"
+                                        data-col-index="10">
+                                        م التقفيل
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[90px] text-center"
+                                        data-col-index="11">
+                                        تدوير
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th id="th-filter-office"
+                                        class="relative py-3 px-3 border-b border-l border-slate-200 font-bold text-slate-700 text-center text-xs"
+                                        data-col-index="12">
+                                        المتابعه
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[110px] text-center"
+                                        data-col-index="13">
+                                        م المتابعه
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[110px] text-center"
+                                        data-col-index="14">
+                                        المكتب
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th id="th-filter-area"
+                                        class="relative py-3 px-3 border-b border-l border-slate-200 font-bold text-slate-700 text-center text-xs"
+                                        data-col-index="15">
+                                        الشركه
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[110px] text-center"
+                                        data-col-index="16">
+                                        م المكتب
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th id="th-filter-employee"
+                                        class="relative py-3 px-3 border-b border-l border-slate-200 font-bold text-slate-700 text-center text-xs"
+                                        data-col-index="17">
+                                        المنطقه
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[120px] text-center"
+                                        data-col-index="18">
+                                        المندوب
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[120px] text-center"
+                                        data-col-index="19">
+                                        م المندوب
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[140px] text-center"
+                                        data-col-index="20">
+                                        العنوان
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="relative py-2.5 px-3 border-b border-l border-slate-200 min-w-[90px] text-center"
+                                        data-col-index="21">
+                                        الرقم
+                                        <div
+                                            class="resizer absolute top-0 left-0 h-full w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-700 transition-colors">
+                                        </div>
+                                    </th>
+
+                                    <th class="py-2.5 px-3 border-slate-200 text-center w-16">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excel-body" class="divide-y divide-slate-100 bg-white"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Modal Container -->
+                    <div id="newRequestModal"
+                        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4 transition-all duration-300">
+
+                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden flex flex-col max-h-[90vh]"
+                            dir="rtl">
+
+                            <div
+                                class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-plus-circle text-emerald-600"></i>
+                                    إضافة طلب جديد
+                                </h3>
+                                <button onclick="closeModal()" type="button"
+                                    class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
+                                    <i class="fa-solid fa-xmark text-base"></i>
+                                </button>
+                            </div>
+
+                            <form id="newRequestForm" onsubmit="handleFormSubmit(event)"
+                                class="p-6 space-y-4 overflow-y-auto">
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5">عنوان الطلب</label>
+                                    <input type="text" id="requestTitle" required placeholder="أدخل عنوان الطلب..."
+                                        class="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5">القسم</label>
+                                    <select id="requestCategory"
+                                        class="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                                        <option value="عام">عام</option>
+                                        <option value="مشتريات">مشتريات</option>
+                                        <option value="صيانة">صيانة</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5">تفاصيل الطلب</label>
+                                    <textarea id="requestDetails" rows="3" placeholder="اكتب التفاصيل هنا..."
+                                        class="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all resize-none"></textarea>
+                                </div>
+
+                                <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                                    <button type="button" onclick="closeModal()"
+                                        class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+                                        إلغاء
+                                    </button>
+                                    <button type="submit" id="submitBtn"
+                                        class="bg-emerald-600 text-white hover:bg-emerald-500 px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2">
+                                        <i class="fa-solid fa-check"></i>
+                                        حفظ الطلب
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. تابة تقسيم المناطق -->
+            <div id="main-panel-2"
+                class="main-panel hidden flex-col gap-6 transition-all duration-500 transform opacity-0 translate-x-10 scale-95">
+                <div
+                    class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-6 max-w-5xl mx-auto w-full">
+
+                    <div
+                        class="border-b pb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-emerald-500"></i>
+                            التقسيم الذكي
+                        </h2>
+
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <div
+                                class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm w-[70px] h-[30px] flex flex-col justify-center items-center">
+                                <span class="text-[16px] font-semibold text-emerald-600">0</span>
+                            </div>
+                            <select id="partition-area-selector"
+                                onchange="autoSaveField('${docId}', 'area', this.value)"
+                                class="p-2.5 border rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-w-[180px]">
+                                <!-- يتم ملئها ديناميكياً من الإعدادات -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- عمود قائمة المناطق المفعّلة -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col">
+                            <h3 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">المناطق النشطة
+                                حالياً</h3>
+                            <div id="active-partition-regions" class="space-y-2 overflow-y-auto max-h-[350px]">
+                                <!-- تظهر هنا المناطق المضافة -->
+                            </div>
+                        </div>
+
+                        <!-- عمود إدخال كود الطلب وجلب بياناته -->
+                        <div class="lg:col-span-2 space-y-4">
+                            <div
+                                class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center justify-between">
+                                <div class="text-right w-full sm:w-auto">
+                                    <span id="current-focused-area-display"
+                                        class="text-sm font-extrabold text-slate-800">
+                                        لم يتم اختيار منطقة
+                                    </span>
+                                </div>
+
+                                <div class="relative flex gap-2 w-full sm:w-auto max-w-xs">
+                                    <input type="text" id="quick-add-order-code" placeholder="أدخل كود الطلب..."
+                                        class="p-2.5 border rounded-lg text-xs font-mono uppercase focus:ring-2 focus:ring-emerald-500 w-full"
+                                        disabled>
+                                    <button onclick="assignOrderToFocusedArea()" id="btn-submit-code"
+                                        class="bg-slate-800 text-white px-4 rounded-lg text-xs font-bold hover:bg-slate-900 transition"
+                                        disabled>تعيين</button>
+                                    <!-- صندوق التلميح الذكي العائم -->
+                                    <div id="quick-search-hint"
+                                        class="absolute z-50 top-full right-0 w-full mt-1 hidden"></div>
+                                </div>
+                            </div>
+
+                            <!-- جدول يعرض الطلبات التي تم تعيينها للمنطقة المحددة -->
+                            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                                <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+                                    <span class="text-xs font-bold text-slate-700">الطلبات الموجهة للمنطقة
+                                        المحددة</span>
+                                    <span id="focused-area-orders-count"
+                                        class="bg-slate-200 text-slate-700 font-mono text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                                </div>
+                                <div class="overflow-x-auto max-h-[250px] overflow-y-auto">
+                                    <table class="w-full text-xs text-right border-collapse">
+                                        <thead class="bg-slate-100 text-slate-600">
+                                            <tr>
+                                                <th class="p-2 border-b">كود الطلب</th>
+                                                <th class="p-2 border-b">اسم العميل</th>
+                                                <th class="p-2 border-b text-left">السعر</th>
+                                                <th class="p-2 border-b">المكتب</th>
+                                                <th class="p-2 border-b text-center">إجراء</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="focused-area-table-body" class="divide-y divide-slate-100">
+                                            <tr>
+                                                <td colspan="5" class="p-8 text-center text-slate-400">برجاء تحديد
+                                                    منطقة.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. تابة التقارير -->
+            <div id="main-panel-3"
+                class="tab-content hidden flex-1 flex-col min-h-0 overflow-auto space-y-6 max-w-7xl mx-auto w-full p-6"
+                dir="rtl">
+            </div>
+
+            <!-- 4. تابة الحسابات -->
+            <div id="main-panel-4" class="tab-content hidden flex-1 flex-col min-h-0 overflow-auto space-y-6">
+                <!-- شريط البحث الموحد الشامل -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="relative">
+                        <label class="block text-xs font-bold text-slate-600 mb-1 text-right">
+                            بحث شامل في التقارير (بالاسم أو رقم الموبايل للمندوب أو المكتب)
+                        </label>
+                        <div class="relative">
+                            <span
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" id="search-all-input"
+                                placeholder="ابحث باسم المندوب، المكتب، أو رقم الموبايل..."
+                                class="w-full bg-white border border-slate-200 rounded-xl py-2 pr-9 pl-3 text-xs text-slate-700 text-right focus:outline-none focus:border-blue-500 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول المناديب -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-motorcycle text-emerald-600"></i> تقارير أداء المناديب والماليات
+                        </h4>
+                        <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            الإجمالي: <span id="drivers-count">0</span>
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-100">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                                <tr>
+                                    <th class="p-3">اسم المندوب</th>
+                                    <th class="p-3 text-center">المسلمة</th>
+                                    <th class="p-3 text-center">المرتجعات</th>
+                                    <th class="p-3 text-center text-amber-600">جزئي</th>
+                                    <th class="p-3 text-center text-purple-600">استبدال</th>
+                                    <th class="p-3 text-center">نسبة النجاح</th>
+                                    <th class="p-3 text-center font-bold text-slate-800">الإجمالي الأساسي</th>
+                                    <th class="p-3 text-center text-rose-600">خصومات</th>
+                                    <th class="p-3 text-center text-indigo-600">عمولة المندوب للطلب</th>
+                                    <th class="p-3 text-left font-bold text-emerald-700">الصافي للمندوب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drivers-report-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- جدول مكاتب الشحن -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-building text-blue-600"></i> تقارير مكاتب وشركات الشحن والماليات
+                        </h4>
+                        <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            الإجمالي: <span id="offices-count">0</span>
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-100">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                                <tr>
+                                    <th class="p-3">اسم المكتب / الشركة</th>
+                                    <th class="p-3 text-center">إجمالي الشحنات</th>
+                                    <th class="p-3 text-center">المسلمة</th>
+                                    <th class="p-3 text-center">المرتجعات</th>
+                                    <th class="p-3 text-center text-amber-600">جزئي</th>
+                                    <th class="p-3 text-center text-purple-600">استبدال</th>
+                                    <th class="p-3 text-center">نسبة النجاح</th>
+                                    <th class="p-3 text-center font-bold text-slate-800">إجمالي المبلغ</th>
+                                    <th class="p-3 text-center text-rose-600">خصومات</th>
+                                    <th class="p-3 text-center text-blue-600">عمولة المكتب</th>
+                                    <th class="p-3 text-left font-bold text-blue-800">المستحق للمكتب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="offices-report-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. المراجعة -->
+            <div id="main-panel-5" class="tab-content hidden flex-1 flex-col min-h-0 overflow-auto gap-4" dir="rtl">
+                <!-- (2) كروت الحالات -->
+                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-emerald-500 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-emerald-700">الطلبات</div>
+                        <div id="review-n-all" class="text-[20px] font-bold text-emerald-600">0</div>
+                        <div class="text-[11px] text-slate-500">القيمة: <span id="review-v-all"
+                                class="font-semibold text-slate-700">0</span></div>
+                    </div>
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-emerald-500 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-emerald-700">الاستلامات</div>
+                        <div id="review-n-recv" class="text-[20px] font-bold text-emerald-600">0</div>
+                        <div class="text-[11px] text-slate-500">القيمة: <span id="review-v-recv"
+                                class="font-semibold text-slate-700">0</span></div>
+                    </div>
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-amber-400 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-amber-700">الجزئي</div>
+                        <div id="review-n-partial" class="text-[20px] font-bold text-amber-600">0</div>
+                        <div class="text-[11px] text-slate-500">القيمة: <span id="review-v-partial"
+                                class="font-semibold text-slate-700">0</span></div>
+                    </div>
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-purple-400 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-purple-700">الاستبدال</div>
+                        <div id="review-n-exch" class="text-[20px] font-bold text-purple-600">0</div>
+                        <div class="text-[11px] text-slate-500">القيمة: <span id="review-v-exch"
+                                class="font-semibold text-slate-700">0</span></div>
+                    </div>
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-rose-400 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-rose-700">رفض رفض</div>
+                        <div id="review-n-rr" class="text-[20px] font-bold text-rose-600">0</div>
+                        <div class="text-[11px] text-slate-500">القيمة: <span id="review-v-rr"
+                                class="font-semibold text-slate-700">0</span></div>
+                    </div>
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-rose-400 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-rose-700">رفض دفع</div>
+                        <div id="review-n-rp" class="text-[20px] font-bold text-rose-600">0</div>
+                        <div class="text-[11px] text-slate-500">القيمة: <span id="review-v-rp"
+                                class="font-semibold text-slate-700">0</span></div>
+                    </div>
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-blue-400 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-blue-700">تدوير</div>
+                        <div id="review-n-rot" class="text-[20px] font-bold text-blue-600">0</div>
+                    </div>
+                    <div
+                        class="bg-white p-3 rounded-xl border border-slate-100 border-t-4 border-t-rose-400 shadow-sm text-center flex flex-col justify-center min-h-[92px]">
+                        <div class="text-[12px] font-semibold text-rose-700">مرتجع</div>
+                        <div id="review-n-ret" class="text-[20px] font-bold text-rose-600">0</div>
+                    </div>
+                </div>
+
+                <!-- (3) الحسابات -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div
+                        class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100 shadow-sm text-center flex flex-col justify-center min-h-[84px]">
+                        <div class="text-[12px] font-semibold text-indigo-700">إجمالي العمولة</div>
+                        <div id="review-stat-commission" class="text-[20px] font-bold text-indigo-600">0</div>
+                    </div>
+                    <div
+                        class="bg-amber-50/60 p-3 rounded-xl border border-amber-100 shadow-sm text-center flex flex-col justify-center min-h-[84px]">
+                        <div class="text-[12px] font-semibold text-amber-700">المديونية (المطلوب سداده)</div>
+                        <div id="review-stat-debt" class="text-[20px] font-bold text-amber-600">0</div>
+                        <div class="text-[11px] text-slate-500">من إجمالي مطلوب: <span id="review-stat-due"
+                                class="font-semibold text-slate-700">0</span></div>
+                    </div>
+                    <div
+                        class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100 shadow-sm text-center flex flex-col justify-center min-h-[84px]">
+                        <div class="text-[12px] font-semibold text-emerald-700">المحوّل (التسويات)</div>
+                        <div id="review-stat-paid" class="text-[20px] font-bold text-emerald-600">0</div>
+                    </div>
+                </div>
+
+                <!-- (4) حسابات المكاتب + التحويلات -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-building text-blue-600 text-xs"></i> حسابات المكاتب
+                            </span>
+                            <span class="text-[11px] text-slate-400">اضغط على مكتب لمراجعته</span>
+                        </div>
+                        <div class="overflow-auto rounded-xl border border-slate-100 max-h-[260px]">
+                            <table class="w-full text-right text-xs whitespace-nowrap">
+                                <thead
+                                    class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="py-2 px-3">المكتب</th>
+                                        <th class="py-2 px-3 text-center">عمولة الأوردر</th>
+                                        <th class="py-2 px-3 text-center">العدد</th>
+                                        <th class="py-2 px-3 text-center">المكتمل</th>
+                                        <th class="py-2 px-3 text-center">التحصيل</th>
+                                        <th class="py-2 px-3 text-center">إجمالي العمولة</th>
+                                        <th class="py-2 px-3 text-center">المطلوب سداده</th>
+                                        <th class="py-2 px-3 text-center">المحوّل</th>
+                                        <th class="py-2 px-3 text-center">المديونية</th>
+                                        <th class="py-2 px-3 text-center">تسوية</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="review-office-body" class="text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="review-extra-slot"
+                        class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <span id="review-detail-title" class="text-sm font-bold text-slate-700">سجل التحويلات</span>
+                            <button type="button" id="review-detail-clear" onclick="reviewSelectOffice('')"
+                                class="hidden px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 transition">
+                                عرض كل المكاتب
+                            </button>
+                        </div>
+                        <div class="overflow-auto rounded-xl border border-slate-100 max-h-[260px]">
+                            <table class="w-full text-right text-xs whitespace-nowrap">
+                                <thead
+                                    class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="py-2 px-2">التاريخ والموعد</th>
+                                        <th id="review-transfers-office-th" class="py-2 px-2">المكتب</th>
+                                        <th class="py-2 px-2 text-center">نوع التحويل</th>
+                                        <th class="py-2 px-2 text-center">المبلغ (جم)</th>
+                                        <th class="py-2 px-2 text-center">المديونية بعد التحويل</th>
+                                        <th class="py-2 px-2">ملاحظة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="review-transfers-body" class="text-slate-700"></tbody>
+                            </table>
+                        </div>
+                        <div id="review-transfers-total" class="text-[11px] font-semibold text-slate-500"></div>
+                    </div>
+                </div>
+
+                <!-- (5) الأوردرات -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="text-sm font-bold text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                            <i class="fa-solid fa-table text-emerald-600 text-xs"></i> الأوردرات
+                        </div>
+                        <span id="review-orders-filter"
+                            class="hidden items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"></span>
+                        <div class="relative flex-1 min-w-[220px]">
+                            <span
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </span>
+                            <input type="text" id="review-search"
+                                placeholder="ابحث في الجدول: عميل، كود، موبايل، مكتب، منطقة، مندوب، حالة..."
+                                class="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <span id="review-search-count" class="text-xs text-slate-400"></span>
+                    </div>
+                    <div class="overflow-auto rounded-xl border border-slate-100 max-h-[55vh]">
+                        <table class="w-full text-right text-xs whitespace-nowrap">
+                            <thead
+                                class="bg-slate-50 text-slate-600 font-bold border-b border-slate-100 sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">العميل</th>
+                                    <th class="p-3">رقم الهاتف</th>
+                                    <th class="p-3 text-center">الحاله</th>
+                                    <th class="p-3 text-center">الاجمالي</th>
+                                    <th class="p-3 text-center">التحصيل</th>
+                                    <th class="p-3">المكتب</th>
+                                    <th class="p-3 text-center">عمولة الأوردر</th>
+                                    <th class="p-3">المنطقه</th>
+                                    <th class="p-3">المندوب</th>
+                                    <th class="p-3 text-center">وقت الإضافة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="review-body" class="text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. التطبيقات -->
+            <div id="main-panel-6" class="tab-content hidden flex-1 flex-col min-h-0 overflow-auto"></div>
+
+            <!-- 7. تابة الاعدادات -->
+            <div id="main-panel-7"
+                class="tab-content hidden flex-1 flex-col min-h-0 overflow-auto bg-slate-50/50 p-4 md:p-6">
+                <div
+                    class="max-w-7xl w-full mx-auto bg-white rounded-2xl p-4 md:p-6 border border-slate-200/70 shadow-sm space-y-6 max-h-[600px] overflow-y-auto">
+
+                    <!-- أزرار التبويبات الفرعية -->
+                    <div
+                        class="flex items-center gap-2 p-1.5 bg-slate-100/80 rounded-xl overflow-x-auto border border-slate-200/50 scrollbar-none">
+                        <button id="sub-btn-4-1" onclick="switchSubTab(4, 1)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            ⚙️ عامة
+                        </button>
+                        <button id="sub-btn-4-2" onclick="switchSubTab(4, 2)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            🏢 المكاتب
+                        </button>
+                        <button id="sub-btn-4-3" onclick="switchSubTab(4, 3)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            🛵 المناديب
+                        </button>
+                        <button id="sub-btn-4-4" onclick="switchSubTab(4, 4)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            📍 المناطق
+                        </button>
+                        <button id="sub-btn-4-5" onclick="switchSubTab(4, 5)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            📍 الحالات
+                        </button>
+                        <button id="sub-btn-4-6" onclick="switchSubTab(4, 6)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            👨‍💼 الموظفين (CRM)
+                        </button>
+                        <button id="sub-btn-4-7" onclick="switchSubTab(4, 7)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            🔐 صلاحيات الوصول
+                        </button>
+                        <button id="sub-btn-4-8" onclick="switchSubTab(4, 8)"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all duration-200 whitespace-nowrap">
+                            📱 التطبيقات
+                        </button>
+                    </div>
+
+                    <!-- محتوى التبويبات الفرعية -->
+                    <div class="sub-panels-container">
+                        <!-- 1. الإعدادات العامة -->
+                        <div id="sub-panel-4-1" class="hidden space-y-5">
+                            <div class="pb-3 border-b border-slate-100">
+                                <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <span>⚙️</span> الإعدادات العامة
+                                </h3>
+                                <p class="text-slate-500 text-xs mt-0.5">بيانات الشركة اللي بتظهر في لوحة التحكم</p>
+                            </div>
+
+                            <form id="general-settings-form" onsubmit="handleGeneralSettingsSubmit(event)"
+                                class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl" autocomplete="off">
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">اسم
+                                            الشركة</label>
+                                        <input type="text" id="general-company-name" required
+                                            oninput="markGeneralDirty()"
+                                            class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                                    </div>
+                                    <p id="general-settings-msg" class="hidden text-[11px] font-semibold"></p>
+                                    <button type="submit" id="general-save-btn"
+                                        class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors disabled:opacity-50">
+                                        حفظ الإعدادات
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">شعار الشركة</label>
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="w-20 h-20 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+                                            <img id="general-logo-preview" src="" alt=""
+                                                class="hidden w-full h-full object-cover">
+                                            <i id="general-logo-placeholder"
+                                                class="fa-regular fa-image text-slate-300 text-2xl"></i>
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label for="general-logo-input"
+                                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold cursor-pointer text-center">
+                                                رفع شعار
+                                            </label>
+                                            <input type="file" id="general-logo-input" accept="image/*" class="hidden"
+                                                onchange="handleLogoSelected(event)">
+                                            <button type="button" onclick="removeGeneralLogo()"
+                                                class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold">
+                                                حذف الشعار
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-2">بيتصغّر تلقائياً لحد 256px قبل الحفظ.</p>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 2. محتوى المكاتب -->
+                        <div id="sub-panel-4-2" class="hidden space-y-5">
+                            <div
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                        <span>🏢</span> إدارة المكاتب
+                                    </h3>
+                                    <p class="text-slate-500 text-xs mt-0.5">إدارة بيانات المكاتب، العمولة، وحالة
+                                        التعامل</p>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="relative flex-1 sm:w-64">
+                                        <input type="text" id="offices-search-input" onkeyup="filterOfficesTable()"
+                                            placeholder="بحث باسم المكتب أو الاختصار..."
+                                            class="w-full pr-9 pl-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white transition-all" />
+                                        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+
+                                    <button type="button" onclick="openAddOfficeModal()"
+                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer whitespace-nowrap">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        إضافة مكتب
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-xl border border-slate-200/80 shadow-xs bg-white">
+                                <table class="w-full text-right text-xs whitespace-nowrap">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">اسم المكتب</th>
+                                            <th class="p-3.5">الاختصار</th>
+                                            <th class="p-3.5 text-center">إجمالي الطلبات</th>
+                                            <th class="p-3.5 text-center">الطلبات المرسلة</th>
+                                            <th class="p-3.5 text-center">التسليمات الناجحة</th>
+                                            <th class="p-3.5 text-center">التحصيلات</th>
+                                            <th class="p-3.5">العمولة (جم)</th>
+                                            <th class="p-3.5 text-center">إجمالي العمولة</th>
+                                            <th class="p-3.5 text-center">الصافي</th>
+                                            <th class="p-3.5 text-center">نسبة التسليم</th>
+                                            <th class="p-3.5 text-center">الحالة</th>
+                                            <th class="p-3.5 text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="offices-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- يتم التحميل بواسطة JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Modal إضافة مكتب -->
+                            <div id="add-office-modal"
+                                class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-[9999] p-4">
+                                <div
+                                    class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 relative animate-in fade-in zoom-in-95 duration-150">
+                                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <h4 class="text-base font-bold text-slate-800">إضافة مكتب جديد</h4>
+                                        <button type="button" onclick="closeAddOfficeModal()"
+                                            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">✕</button>
+                                    </div>
+                                    <form id="add-office-form" onsubmit="handleOfficeSubmit(event)" class="space-y-3">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">اسم
+                                                المكتب</label>
+                                            <input type="text" id="modal-office-name" required
+                                                placeholder="مثال: مكتب أكسبريس"
+                                                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">الكود /
+                                                الاختصار</label>
+                                            <input type="text" id="modal-office-code" required placeholder="مثال: EXP"
+                                                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 uppercase" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">نسبة العمولة
+                                                (جم)</label>
+                                            <input type="number" step="0.5" id="modal-office-commission" required
+                                                placeholder="10"
+                                                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500" />
+                                        </div>
+                                        <div class="flex justify-end gap-2 pt-2">
+                                            <button type="button" onclick="closeAddOfficeModal()"
+                                                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition-colors">إلغاء</button>
+                                            <button type="submit"
+                                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors">حفظ
+                                                المكتب</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Modal تعديل مكتب -->
+                            <div id="edit-office-modal"
+                                class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-[9999] p-4">
+                                <div
+                                    class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 relative animate-in fade-in zoom-in-95 duration-150">
+                                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                        <h4 class="text-base font-bold text-slate-800">تعديل بيانات المكتب</h4>
+                                        <button type="button" onclick="closeEditOfficeModal()"
+                                            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">✕</button>
+                                    </div>
+                                    <form id="edit-office-form" onsubmit="handleEditOfficeSubmit(event)"
+                                        class="space-y-3">
+                                        <input type="hidden" id="edit-office-id" />
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">اسم
+                                                المكتب</label>
+                                            <input type="text" id="edit-office-name" required
+                                                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">الكود /
+                                                الاختصار</label>
+                                            <input type="text" id="edit-office-code" required
+                                                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 uppercase" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">العمولة
+                                                (جم)</label>
+                                            <input type="number" step="0.5" id="edit-office-commission" required
+                                                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500" />
+                                        </div>
+                                        <div class="flex justify-end gap-2 pt-2">
+                                            <button type="button" onclick="closeEditOfficeModal()"
+                                                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition-colors">إلغاء</button>
+                                            <button type="submit"
+                                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors">حفظ
+                                                التغييرات</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. محتوى المناديب -->
+                        <div id="sub-panel-4-3" class="hidden space-y-5">
+                            <div
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                        <span>🛵</span> إدارة المناديب
+                                    </h3>
+                                    <p class="text-slate-500 text-xs mt-0.5">متابعة أداء المناديب، التحصيلات، العمولات،
+                                        وحالة التعامل</p>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="relative flex-1 sm:w-64">
+                                        <input type="text" id="couriers-search-input" onkeyup="filterCouriersTable()"
+                                            placeholder="بحث باسم المندوب أو الهاتف..."
+                                            class="w-full pr-9 pl-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white transition-all" />
+                                        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+
+                                    <button type="button" onclick="addNewCourierRow()"
+                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer whitespace-nowrap">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        إضافة مندوب
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-xl border border-slate-200/80 shadow-xs bg-white">
+                                <table class="w-full text-right text-xs whitespace-nowrap">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">اسم المندوب</th>
+                                            <th class="p-3.5">رقم الهاتف</th>
+                                            <th class="p-3.5 text-center">أوردرات الشهر</th>
+                                            <th class="p-3.5 text-center">إجمالي الطلبات</th>
+                                            <th class="p-3.5 text-center">التسليمات الناجحة</th>
+                                            <th class="p-3.5 text-center">المرتجعات</th>
+                                            <th class="p-3.5 text-center">عمولة الأوردر (ج.م)</th>
+                                            <th class="p-3.5 text-center">إجمالي العمولة</th>
+                                            <th class="p-3.5 text-center">نسبة التسليم</th>
+                                            <th class="p-3.5 text-center">الحالة</th>
+                                            <th class="p-3.5 text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="couriers-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- يتم تحميل وتحديث البيانات عبر JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 4. محتوى المناطق -->
+                        <div id="sub-panel-4-4" class="hidden space-y-5">
+                            <div
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                        <span>📍</span> إدارة المناطق
+                                    </h3>
+                                    <p class="text-slate-500 text-xs mt-0.5">متابعة إحصائيات المناطق، أوردرات الشهر،
+                                        وإجمالي المبيعات/التحصيلات</p>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="relative flex-1 sm:w-64">
+                                        <input type="text" id="zones-search-input" onkeyup="filterZonesTable()"
+                                            placeholder="بحث باسم المنطقة..."
+                                            class="w-full pr-9 pl-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white transition-all" />
+                                        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+
+                                    <button type="button" onclick="addNewZoneRow()"
+                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer whitespace-nowrap">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        إضافة منطقة
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-xl border border-slate-200/80 shadow-xs bg-white">
+                                <table class="w-full text-right text-xs whitespace-nowrap">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">اسم المنطقة</th>
+                                            <th class="p-3.5">المحافظة</th> <!-- السطر الجديد -->
+                                            <th class="p-3.5 text-center">أوردرات الشهر</th>
+                                            <th class="p-3.5 text-center">إجمالي الطلبات</th>
+                                            <th class="p-3.5 text-center">التسليمات الناجحة</th>
+                                            <th class="p-3.5 text-center">إجمالي التحصيلات (ج.م)</th>
+                                            <th class="p-3.5 text-center">نسبة التسليم</th>
+                                            <th class="p-3.5 text-center">الحالة</th>
+                                            <th class="p-3.5 text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="zones-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- يتم تحميل وتحديث البيانات عبر JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 5. محتوى المناطق -->
+                        <div id="sub-panel-4-5" class="hidden space-y-5">
+                            <div
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                        <span>📍</span> إدارة الحالات
+                                    </h3>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <button type="button" onclick="openAddStatusModal()"
+                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer whitespace-nowrap">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        إضافة حاله
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-xl border border-slate-200/80 shadow-xs bg-white">
+                                <table class="w-full text-right text-xs whitespace-nowrap">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">الحاله</th>
+                                            <th class="p-3.5 text-center">العدد</th>
+                                            <th class="p-3.5 text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="statuses-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- يتم تحميل وتحديث البيانات عبر JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 6. محتوى الموظفين (CRM) -->
+                        <div id="sub-panel-4-6" class="hidden space-y-5">
+                            <div
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                        <span>👨‍💼</span> إدارة الموظفين وخدمة العملاء (CRM)
+                                    </h3>
+                                    <p class="text-slate-500 text-xs mt-0.5">تعيين الموظفين، متابعة نشاط التواصل، تقييم
+                                        الأداء، وإدارة أوردرات المتابعة</p>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="relative flex-1 sm:w-64">
+                                        <input type="text" id="staff-search-input" onkeyup="filterStaffTable()"
+                                            placeholder="بحث باسم الموظف أو الهاتف..."
+                                            class="w-full pr-9 pl-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white transition-all" />
+                                        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+
+                                    <button type="button" onclick="addNewStaffRow()"
+                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer whitespace-nowrap">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        تعيين موظف جديد
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-xl border border-slate-200/80 shadow-xs bg-white">
+                                <table class="w-full text-right text-xs whitespace-nowrap">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">اسم الموظف</th>
+                                            <th class="p-3.5">رقم الهاتف</th>
+                                            <th class="p-3.5 text-center">أوردرات المستلمة</th>
+                                            <th class="p-3.5 text-center">عدد التواصل/المكالمات</th>
+                                            <th class="p-3.5 text-center">متابعات مفتوحة</th>
+                                            <th class="p-3.5 text-center">التقييم</th>
+                                            <th class="p-3.5 text-center">الحالة</th>
+                                            <th class="p-3.5 text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="staff-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- يتم تحميل البيانات وتحديثها عبر JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 7. صلاحيات الوصول -->
+                        <div id="sub-panel-4-7" class="hidden space-y-5">
+                            <div
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                        <span>🔐</span> إدارة المستخدمين وصلاحيات النظام
+                                    </h3>
+                                    <p class="text-slate-500 text-xs mt-0.5">البحث برقم الموبايل أو البطاقة وتحديد
+                                        التبويبات المسموح بدخولها</p>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="relative flex-1 sm:w-72">
+                                        <input type="text" id="users-search-input" onkeyup="filterUsersTable()"
+                                            placeholder="بحث برقم الموبايل أو رقم البطاقة..."
+                                            class="w-full pr-9 pl-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white transition-all" />
+                                        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+
+                                    <button type="button" onclick="addNewUserRow()"
+                                        class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer whitespace-nowrap">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        إضافة مستخدم نظام
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-xl border border-slate-200/80 shadow-xs bg-white">
+                                <table class="w-full text-right text-xs whitespace-nowrap">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3.5">اسم المستخدم</th>
+                                            <th class="p-3.5">رقم الموبايل</th>
+                                            <th class="p-3.5">رقم البطاقة (القومي)</th>
+                                            <th class="p-3.5 text-center">صلاحيات الوصول للتبويبات الرئيسية</th>
+                                            <th class="p-3.5 text-center">صلاحيات الوصول للتفاصيل الداخلية</th>
+                                            <th class="p-3.5 text-center">الحالة</th>
+                                            <th class="p-3.5 text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- يتم تحميل بيانات المستخدمين عبر JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 8. التطبيقات-->
+                        <div id="sub-panel-4-8" class="hidden space-y-5">
+                            <div class="pb-3 border-b border-slate-100">
+                                <h3 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <span>📱</span> أعمدة التطبيقات
+                                </h3>
+                                <p class="text-slate-500 text-xs mt-0.5">تحكم في عنوان الكارت المطوي وفي التفاصيل اللي
+                                    تظهر عند فتحه (بيتحفظ تلقائياً)</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-4">
+                                    <h4 class="text-sm font-bold text-slate-700">
+                                        <i class="fa-solid fa-headset text-emerald-600"></i> تطبيق المتابعه
+                                    </h4>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">عنوان الكارت (المطوي)
+                                        </div>
+                                        <div id="app-header-follow" class="grid grid-cols-2 gap-2"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">التفاصيل (عند الفتح)
+                                        </div>
+                                        <div id="app-fields-follow" class="grid grid-cols-2 gap-2"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">الحقول القابلة للتعديل
+                                        </div>
+                                        <div id="app-edit-follow" class="grid grid-cols-2 gap-2"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">ترتيب الحقول (للهيدر
+                                            والتفاصيل والنسخ)</div>
+                                        <div id="app-order-follow" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+                                    </div>
+                                </div>
+
+
+
+                                <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-4">
+                                    <h4 class="text-sm font-bold text-slate-700"><i
+                                            class="fa-solid fa-motorcycle text-emerald-600"></i> تطبيق المندوب</h4>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">عنوان الكارت (المطوي)
+                                        </div>
+                                        <div id="app-header-courier" class="grid grid-cols-2 gap-2"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">التفاصيل (عند الفتح)
+                                        </div>
+                                        <div id="app-fields-courier" class="grid grid-cols-2 gap-2"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">الحقول القابلة للتعديل
+                                        </div>
+                                        <div id="app-edit-courier" class="grid grid-cols-2 gap-2"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[11px] font-bold text-slate-500 mb-2">ترتيب الحقول (للهيدر
+                                            والتفاصيل والنسخ)</div>
+                                        <div id="app-order-courier" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Tabs Container -->
+    <div class="border-t border-slate-200 px-6 flex-shrink-0">
+        <nav
+            class="bg-slate-100/60 backdrop-blur-md border border-white/40 shadow-sm p-2 rounded-2xl border-emerald-900/10 shadow-xl overflow-x-auto relative">
+            <!-- Sliding Background Pill Indicator -->
+            <div id="tab-indicator"
+                class="absolute top-2 bottom-2 rounded-xl bg-emerald-600 shadow-lg shadow-emerald-600/30 transition-all duration-500 ease-out z-0 pointer-events-none">
+            </div>
+
+            <div class="flex items-center gap-2 min-w-max md:min-w-0 justify-start md:justify-between relative z-10"
+                id="main-tabs-container">
+                <button onclick="switchMainTab(1)" id="main-btn-1"
+                    class="main-tab-btn flex-1 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 text-white z-10 relative">
+                    <i class="fa-solid fa-table"></i>
+                    <span>الطلبات</span>
+                </button>
+                <button onclick="switchMainTab(2)" id="main-btn-2"
+                    class="main-tab-btn flex-1 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 z-10 relative">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span>التقسيم</span>
+                </button>
+                <button onclick="switchMainTab(3)" id="main-btn-3"
+                    class="main-tab-btn flex-1 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 z-10 relative">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>التقارير</span>
+                </button>
+                <button onclick="switchMainTab(4)" id="main-btn-4"
+                    class="main-tab-btn flex-1 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 z-10 relative">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>الحسابات</span>
+                </button>
+                <button onclick="switchMainTab(5)" id="main-btn-5"
+                    class="main-tab-btn flex-1 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 z-10 relative">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>مراجعه</span>
+                </button>
+                <button onclick="switchMainTab(6)" id="main-btn-6"
+                    class="main-tab-btn flex-1 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 z-10 relative">
+                    <i data-lucide="layout-grid" class="me-1"></i>
+                    <span>التطبيقات</span>
+                </button>
+                <button onclick="switchMainTab(7)" id="main-btn-7"
+                    class="main-tab-btn flex-1 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 z-10 relative">
+                    <i class="fa-solid fa-gear me-1"></i>
+                    <span>الاعدادات</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- مودال تقفيل اليوم -->
+    <div id="closeDayModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[9999] p-4"
+        dir="rtl">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-slate-700"></i>
+                    تقفيل اليوم
+                </h3>
+                <button type="button" onclick="closeCloseDayModal()"
+                    class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">✕</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">تاريخ التقفيل</label>
+                    <input type="date" id="close-day-date" oninput="updateCloseDayPreview()"
+                        class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500">
+                </div>
+                <div id="close-day-preview"
+                    class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-600"></div>
+                <div class="flex justify-end gap-2 pt-1">
+                    <button type="button" onclick="closeCloseDayModal()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition-colors">إلغاء</button>
+                    <button type="button" id="close-day-confirm" onclick="confirmCloseDay()"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-50">تأكيد
+                        التقفيل</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Firebase -->
+    <!-- Firebase (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script>
-        function showTab(name) {
-            const names = ['profit', 'finance', 'delivery', 'distribute', 'receive', 'overview'];
-            
-            document.querySelectorAll('.tab').forEach((t, i) => {
-                t.classList.toggle('active', names[i] === name);
-            });
-            
-            document.querySelectorAll('.section').forEach(s => {
-                s.classList.remove('active');
-            });
-            
-            const targetSection = document.getElementById('sec-' + name);
-            if(targetSection) {
-                targetSection.classList.add('active');
-            }
-            
-            if (name === 'profit' && typeof drawChart === 'function') drawChart();
+        const firebaseConfig = {
+            apiKey: "...",
+            authDomain: "bondok-20d85.firebaseapp.com",
+            projectId: "bondok-20d85",
+            storageBucket: "bondok-20d85.firebasestorage.app",
+            messagingSenderId: "552872391837",
+            appId: "1:552872391837:web:6e4fe8f11677a285785074",
+            measurementId: "G-NCX72MT8W4"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
-
-        const URL_SECRET = "https://script.google.com/macros/s/AKfycbwf2Xl0r7vHufyGBfTDgaFdeUR5oO4OmMJfDJmMWwpnEuCORfTNAJxLfVOhLhiSdHWY/exec";
-
-        let isEditing = false;
-        let globalData = [];
-
-        let currentPage = 1;
-        const rowsPerPage = 20; 
-        let filteredRows = []; 
-
-        document.addEventListener("DOMContentLoaded", function () {
-            fetchMyData();
-            setInterval(fetchMyData, 5000);
-        });
-
-        // دالة تلوين السلكت فقط مع الإبقاء على خلفية الجدول بيضاء
-        function refreshStatusColors(selectElement) {
-            const val = selectElement.value;
-
-            if (val === "تسليم كامل") {
-                selectElement.style.backgroundColor = "var(--bg-success)";
-                selectElement.style.color = "var(--text-success)";
-                selectElement.style.borderColor = "var(--text-success)";
-            } else if (val === "تسليم جزئي") {
-                selectElement.style.backgroundColor = "var(--bg-partial)";
-                selectElement.style.color = "var(--text-partial)";
-                selectElement.style.borderColor = "var(--text-partial)";
-            } else if (val === "مؤجل") {
-                selectElement.style.backgroundColor = "var(--bg-pending)";
-                selectElement.style.color = "var(--text-pending)";
-                selectElement.style.borderColor = "var(--text-pending)";
-            } else if (val === "ملغي") {
-                selectElement.style.backgroundColor = "var(--bg-warning)";
-                selectElement.style.color = "var(--text-warning)";
-                selectElement.style.borderColor = "var(--text-warning)";
-            } else {
-                selectElement.style.backgroundColor = "var(--surface)";
-                selectElement.style.color = "var(--text-main)";
-                selectElement.style.borderColor = "#cbd5e0";
-            }
-        }
-
-        function fetchMyData() {
-            if (isEditing ||
-                document.activeElement.id === 'idSearch' ||
-                document.activeElement.id === 'statusFilter' ||
-                document.activeElement.id === 'riderFilter' ||
-                document.activeElement.id === 'zoneFilter' ||
-                document.activeElement.classList.contains('status-select')) return;
-
-            fetch(URL_SECRET)
-                .then(res => res.json())
-                .then(data => {
-                    if (isEditing) return;
-
-                    globalData = data;
-                    updateRiderFilterOptions(data);
-                    updateZoneFilterOptions(data); 
-                    applyFilters(); 
-                })
-                .catch(err => {
-                    let tbody = document.querySelector('#myTable tbody');
-                    if (tbody && tbody.innerHTML.includes('جاري تحديث')) {
-                        tbody.innerHTML = '<tr><td colspan="15" style="color:red;">عفواً.. فشل التحديث التلقائي .</td></tr>';
-                    }
-                });
-        }
-
-        function updateRiderFilterOptions(data) {
-            let filterSelect = document.getElementById('riderFilter');
-            let currentSelected = filterSelect.value;
-
-            let riders = new Set();
-            for (let i = 1; i < data.length; i++) {
-                if (data[i][1]) riders.add(data[i][1].trim());
-            }
-
-            filterSelect.innerHTML = '<option value="all">كل المناديب</option>';
-            riders.forEach(rider => {
-                let option = document.createElement('option');
-                option.value = rider;
-                option.textContent = rider;
-                filterSelect.appendChild(option);
-            });
-
-            if ([...filterSelect.options].some(opt => opt.value === currentSelected)) {
-                filterSelect.value = currentSelected;
-            }
-        }
-
-        function updateZoneFilterOptions(data) {
-            let zoneSelect = document.getElementById('zoneFilter');
-            let currentSelected = zoneSelect.value;
-
-            let zones = new Set();
-            for (let i = 1; i < data.length; i++) {
-                if (data[i][7]) zones.add(data[i][7].trim());
-            }
-
-            zoneSelect.innerHTML = '<option value="all">كل المناطق</option>';
-            zones.forEach(zone => {
-                let option = document.createElement('option');
-                option.value = zone;
-                option.textContent = zone;
-                zoneSelect.appendChild(option);
-            });
-
-            if ([...zoneSelect.options].some(opt => opt.value === currentSelected)) {
-                zoneSelect.value = currentSelected;
-            }
-        }
-
-        function applyFilters() {
-            if (globalData.length <= 1) return;
-
-            let selectedRider = document.getElementById('riderFilter').value;
-            let selectedZone = document.getElementById('zoneFilter').value;
-            let selectedStatus = document.getElementById('statusFilter').value;
-            let searchIdValue = document.getElementById('idSearch').value.trim().toLowerCase();
-
-            filteredRows = [];
-
-            for (let i = 1; i < globalData.length; i++) {
-                let row = globalData[i];
-                let rowIndex = i + 1; 
-
-                let idValue = row[0] ? row[0].toString().trim().toLowerCase() : '';
-                let riderName = row[1] ? row[1].trim() : '';
-                let currentStatus = row[2] ? row[2].trim() : '';
-                let zoneName = row[7] ? row[7].trim() : '';
-
-                if (selectedRider !== 'all' && riderName !== selectedRider) continue;
-                if (selectedZone !== 'all' && zoneName !== selectedZone) continue;
-
-                if (selectedStatus !== 'all') {
-                    if (selectedStatus === 'فارغ' && currentStatus !== '') continue;
-                    else if (selectedStatus !== 'فارغ' && currentStatus !== selectedStatus) continue;
-                }
-
-                if (searchIdValue !== '' && !idValue.includes(searchIdValue)) continue;
-
-                filteredRows.push({ data: row, originalIndex: rowIndex });
-            }
-
-            currentPage = 1;
-            renderPaginationTable();
-        }
-
-        function renderPaginationTable() {
-            let tbody = document.querySelector('#myTable tbody');
-            tbody.innerHTML = '';
-
-            if (filteredRows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="15" style="color: #888;">لا توجد نتائج مطابقة للبحث الحالي.</td></tr>';
-                document.getElementById('pageInfo').innerText = "صفحة 0 من 0";
-                document.getElementById('prevBtn').disabled = true;
-                document.getElementById('nextBtn').disabled = true;
-                return;
-            }
-
-            let totalPages = Math.ceil(filteredRows.length / rowsPerPage);
-            let startIndex = (currentPage - 1) * rowsPerPage;
-            let endIndex = Math.min(startIndex + rowsPerPage, filteredRows.length);
-
-            for (let i = startIndex; i < endIndex; i++) {
-                let rowItem = filteredRows[i];
-                let row = rowItem.data;
-                let rowIndex = rowItem.originalIndex;
-                let currentStatus = row[2] ? row[2].trim() : '';
-
-                tbody.innerHTML += `
-                <tr>
-                    <td>${row[0] || ''}</td>
-                    <td>${row[1] || ''}</td>
-                    <td>
-                        <select class="status-select" onfocus="isEditing=true" onblur="isEditing=false" onchange="updateCell(${rowIndex}, 3, this)">
-                            <option value="" ${currentStatus === '' ? 'selected' : ''}>- اختر الحالة -</option>
-                            <option value="تسليم كامل" ${currentStatus === 'تسليم كامل' ? 'selected' : ''}>تسليم كامل</option>
-                            <option value="تسليم جزئي" ${currentStatus === 'تسليم جزئي' ? 'selected' : ''}>تسليم جزئي</option>
-                            <option value="مؤجل" ${currentStatus === 'مؤجل' ? 'selected' : ''}>مؤجل</option>
-                            <option value="ملغي" ${currentStatus === 'ملغي' ? 'selected' : ''}>ملغي</option>
-                        </select>
-                    </td>
-                    <td>${row[3] || ''}</td>
-                    <td>${row[4] || ''}</td>
-                    <td>${row[5] || ''}</td>
-                    <td>${row[6] || ''}</td>
-                    <td>${row[7] || ''}</td>
-                    <td>${row[8] || ''}</td>
-                    <td>${row[9] || ''}</td>
-                    <td>${row[10] || ''}</td>
-                    <td>${row[11] || ''}</td>
-                    <td>${row[12] || ''}</td>
-                    <td>${row[13] || ''}</td>
-                    <td>${row[14] || ''}</td>
-                </tr>
-                `;
-            }
-
-            // تلوين السلكت فقط فور بناء الجدول
-            document.querySelectorAll('.status-select').forEach(select => {
-                refreshStatusColors(select);
-            });
-
-            document.getElementById('pageInfo').innerText = `صفحة ${currentPage} من ${totalPages}`;
-            document.getElementById('prevBtn').disabled = (currentPage === 1);
-            document.getElementById('nextBtn').disabled = (currentPage === totalPages);
-        }
-
-        function changePage(direction) {
-            let totalPages = Math.ceil(filteredRows.length / rowsPerPage);
-            let targetPage = currentPage + direction;
-
-            if (targetPage >= 1 && targetPage <= totalPages) {
-                currentPage = targetPage;
-                renderPaginationTable();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
-
-        function updateCell(rowIndex, colIndex, cellElement) {
-            isEditing = true;
-            let newValue = cellElement.value;
-            let statusMessage = document.getElementById('statusMessage');
-
-            // تحديث لون السلكت فوراً محلياً
-            refreshStatusColors(cellElement);
-
-            statusMessage.style.opacity = '1';
-            statusMessage.innerText = '⏳ جاري تحديث الشيت...';
-
-            let formData = new FormData();
-            formData.append('action', 'update');
-            formData.append('row', rowIndex);
-            formData.append('col', colIndex);
-            formData.append('value', newValue);
-
-            fetch(URL_SECRET, {
-                method: 'POST',
-                body: formData
-            })
-                .then(res => res.json())
-                .then(data => {
-                    isEditing = false;
-                    if (data.result === 'success') {
-                        statusMessage.innerText = '✅ تم تحديث الحالة في الشيت بنجاح!';
-
-                        if (globalData[rowIndex - 1]) {
-                            globalData[rowIndex - 1][colIndex - 1] = newValue;
-                        }
-
-                        setTimeout(() => { statusMessage.style.opacity = '0'; }, 2000);
-                    } else {
-                        alert('فشل التحديث، تأكد من كود السكريبت الخلفي للـ شيت');
-                        statusMessage.style.opacity = '0';
-                    }
-                })
-                .catch(err => {
-                    isEditing = false;
-                    alert('حدث خطأ في الاتصال أثناء تحديث البيانات.');
-                    statusMessage.style.opacity = '0';
-                });
-        }
+        window.db = firebase.firestore();
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+    <script src="/tabs.js"></script>
+    <script src="/orders-table.js"></script>
+    <script src="/Orders filter.js"></script>
+    <script src="/zoning.js" defer></script>
+    <script src="/reports.js"></script>
+    <script src="/accounts.js"></script>
+    <script src="/settings.js"></script>
+    <script src="/apps.js"></script>
+    <script src="/review.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="/review-export.js"></script>
+    <script src="/couriers .JS"></script>
 
 </body>
 
